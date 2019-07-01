@@ -1,0 +1,105 @@
+// FileHandler.cpp
+
+#include <windows.h>
+#include "FileHandler.h"
+
+FileHandler::~FileHandler()
+{
+  strm.close();
+}
+
+bool FileHandler::OpenForRead(const std::string& filename)
+{
+  unsigned int count = 0;
+  while(++count < 10)
+  {
+    strm.open(filename.c_str(),std::ios::in|std::ios::binary);
+    if(strm.good())
+      return true;
+    ::Sleep(20);
+  }
+  return false;
+}
+
+int FileHandler::Read(unsigned int numBytes, char block[])
+{
+//  if(!strm.good())
+//    return false;
+  unsigned int i;
+  int ch;
+  for(i=0; i<numBytes; ++i)
+  {
+    ch = strm.get();
+    if(strm.good())
+      block[i] = ch;
+    else
+      break;
+  }
+  return i;
+}
+
+bool FileHandler::OpenForWrite(const std::string& filename)
+{
+  unsigned int count = 0;
+  while(++count < 10)
+  {
+    strm.open(filename.c_str(),std::ios::out|std::ios::binary);
+    if(strm.good())
+      return true;
+    ::Sleep(20);
+  }
+  return false;
+}
+
+int FileHandler::Write(unsigned int numBytes, char block[])
+{
+  unsigned int i;
+  for(i=0; i<numBytes; ++i)
+  {
+    strm.put(block[i]);
+    if(!strm.good())
+      break;
+  }
+  return i;
+}
+
+void FileHandler::Close()
+{
+  strm.close();
+}
+
+#include <iostream>
+
+void main()
+{
+  std::string infile  = "temp.txt";
+  std::string outfile = "output.dat";
+  FileHandler fh_in, fh_out;
+
+  if(fh_in.OpenForRead(infile))
+  {
+    const unsigned int BlockSize = 1024;
+    char block[BlockSize];
+
+    if(fh_out.OpenForWrite(outfile))
+    {
+      int bytesRead;
+      while((bytesRead = fh_in.Read(BlockSize,block)) > 0)
+      {
+        std::cout << "\n  read " << bytesRead << " bytes";
+        fh_out.Write(bytesRead,block);
+      }
+      fh_in.Close();
+      fh_out.Close();
+    }
+    else
+    {
+      std::cout << "\n  could not open " << outfile << " for writing\n\n";
+    }
+  }
+  else
+  {
+    std::cout << "\n  could not open " << infile;
+  }
+  std::cout << "\n\n";
+}

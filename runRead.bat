@@ -1,0 +1,1 @@
+"./debug/filereader" SharedFile.dat
